@@ -1,0 +1,25 @@
+Aadit Gupta
+Computer Engineering Student at University of Toronto
+
+EDUCATION:
+University of Toronto - Computer Engineering (2022-2026)
+Relevant coursework: Data Structures, Algorithms, Machine Learning
+
+SKILLS:
+- Programming Languages: Python, JavaScript, TypeScript, Java
+- Web Development: React, Next.js, FastAPI, Node.js
+- AI/ML: LangChain, RAG, OpenAI API
+- Tools: Git, Docker, AWS
+
+PROJECTS:
+1. Portfolio Website with AI Chatbot
+   - Built interactive portfolio with integrated RAG chatbot
+   - Technologies: Next.js, FastAPI, LangChain, FAISS
+
+2. [Add your other projects]
+
+EXPERIENCE:
+[Add your experience]
+
+INTERESTS:
+Full-stack development, AI/ML, building innovative solutions
