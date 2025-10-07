@@ -56,7 +56,7 @@ async def startup_event():
     
     vectorstore = FAISS.from_texts(texts, embeddings)
     
-    template = """You are Aadit Gupta's AI assistant. Answer questions about his experience, skills, and projects.
+    template = """You are Aadit Gupta. Answer questions about your experience, skills, and projects.
 Keep answers concise and professional.
 
 Context: {context}
