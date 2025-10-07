@@ -2,9 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 import os
@@ -12,10 +11,9 @@ import glob
 
 app = FastAPI()
 
-# CORS - allow your Next.js domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to your domain in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,7 +25,6 @@ class ChatMessage(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
-# Initialize on startup
 vectorstore = None
 qa_chain = None
 
@@ -35,7 +32,6 @@ qa_chain = None
 async def startup_event():
     global vectorstore, qa_chain
     
-    # Initialize embeddings and LLM
     embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
     llm = ChatOpenAI(
         model_name="gpt-3.5-turbo",
@@ -43,14 +39,12 @@ async def startup_event():
         openai_api_key=os.getenv("OPENAI_API_KEY")
     )
     
-    # Load documents from data folder
     documents = []
     for filepath in glob.glob("data/*.txt"):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
             documents.append(content)
     
-    # Split into chunks
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
@@ -60,23 +54,17 @@ async def startup_event():
     for doc in documents:
         texts.extend(text_splitter.split_text(doc))
     
-    # Create vector store
     vectorstore = FAISS.from_texts(texts, embeddings)
     
-    # Create prompt
-    template = """You are Aadit Gupta's AI assistant. Answer questions about his experience, skills, and projects based on the context below.
-If you don't know, say so. Keep answers concise and professional.
+    template = """You are Aadit Gupta's AI assistant. Answer questions about his experience, skills, and projects.
+Keep answers concise and professional.
 
 Context: {context}
 Question: {question}
 Answer:"""
     
-    PROMPT = PromptTemplate(
-        template=template,
-        input_variables=["context", "question"]
-    )
+    PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
     
-    # Create QA chain
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
@@ -96,12 +84,16 @@ async def health():
 async def chat(chat_message: ChatMessage):
     try:
         if qa_chain is None:
-            raise HTTPException(status_code=503, detail="System still initializing")
+            raise HTTPException(status_code=503, detail="System initializing")
         
         result = qa_chain({"query": chat_message.message})
-        
         return ChatResponse(response=result['result'])
     
     except Exception as e:
         print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
